@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["Algorithm","Algorithms supported by Schannel."],["Direction","The communication direction that an `SchannelCred` will support."],["Protocol","Protocols supported by Schannel."]],"struct":[["Builder","A builder type for `SchannelCred`s."],["SchannelCred","An SChannel credential."]]};

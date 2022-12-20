@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["CryptKey","A handle to a key."]]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["encode","Encode a string via RFC 2047."]]};
