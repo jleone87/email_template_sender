@@ -25,41 +25,44 @@ impl Display for Reciever{
 
 ///Funtion that will ask for at least one reciever. Unlimited recievers can be requested.
 fn get_send_list(send_list : &mut Vec<Reciever>){
-    //Creates two variables that will temporarily house emails and names
-    let mut email_address = String::new();
-    let mut full_name = String::new();
-    //Prompt for first email
-    print!("Please enter the email of your first recipient: ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut email_address).unwrap();
-    //prompt for first name
-    print!("Please enter the name of your first recipient: ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut full_name).unwrap();
-    //Fills our send_list vec with a new reciever entry
-    send_list.push(Reciever{ email: email_address.clone(), name: full_name.clone() });
     //Creates a named loop to repeatedly ask for names
     'outer:loop{
         //Clears our email and name
-        email_address = String::new();
-        full_name = String::new();
+        let mut email_address = String::new();
+        let mut full_name = String::new();
         //Prompt for email
         print!("Please enter the email or # to stop adding recipients: ");
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut email_address).unwrap();
         //checks if quit character was inputted
-        if email_address.trim().eq("#"){
+        if email_address.trim().eq("#") && send_list.len() > 0{
             break 'outer;
         } 
+        else if email_address.trim().eq("#"){
+            println!("Must have at least one recipient");
+            continue 'outer;
+        }
         //Prompt for name
         print!("Please enter the name or # to stop adding recipients: ");
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut full_name).unwrap();
         //Checks if quit character was inputted
-        if full_name.trim().eq("#"){
+        if full_name.trim().eq("#") && send_list.len() > 0{
             break 'outer;
-        } 
-        send_list.push(Reciever{ email: email_address.clone(), name: full_name.clone() });
+        }
+        else if email_address.trim().eq("#"){
+            println!("Must have at least one recipient");
+            continue 'outer;
+        }
+        //checks if an actual email address was inputted
+        if email_address.contains("@") && email_address.contains(".") {
+            //Pushes reciever into our send list
+            send_list.push(Reciever{ email: email_address.clone(), name: full_name.clone() });
+        }
+        else{
+            println!("Email address invalid please use a valid format. example someone@gmail.com");
+        }
+        
     }
 }
 
@@ -81,6 +84,23 @@ fn preview_message(username : &String, recipient : &Reciever, header : &String, 
     println!("Header: {}", header.replace("<name>", &recipient.name));
     println!("Body:\n{}", body.replace("<name>", &recipient.name));
 
+}
+
+///creates a Message object and returns it
+fn create_message(username : &String, recipient_name : &String, email_address : &String, header : &String, body : &String) -> Message{
+    //Initializes a Message object
+    let email = Message::builder() 
+    .from(format!("{}", username.trim()).parse().unwrap()) 
+    .to(format!("{} <{}>", recipient_name.trim(),email_address.trim()).parse().unwrap()) 
+    //.replace changes <name> to actual recipient name
+    .subject(header.replace("<name>", recipient_name.trim())) 
+    //This is our body, you can only send html emails with multiparts
+    .multipart(MultiPart::alternative_plain_html(
+        //Creates an empty string to satisfy the multiparts first argument
+        String::from(""),
+        body.replace("<name>", recipient_name.trim()),
+    )).unwrap();
+    return email
 }
 
 ///Driver function that initiates email template sender
@@ -134,23 +154,10 @@ fn main() {
     //Sends email
     else{
         //Loops through our send_list vector
-        
         for recipient in send_list{
-            //Initializes a Message object
-            let email = Message::builder() 
-            .from(format!("{}", username.trim()).parse().unwrap()) 
-            .to(format!("{} <{}>", recipient.name.trim(),recipient.email.trim()).parse().unwrap()) 
-            //.replace changes <name> to actual recipient name
-            .subject(header.replace("<name>", recipient.name.trim())) 
-            //This is our body, you can only send html emails with multiparts
-            .multipart(MultiPart::alternative_plain_html(
-                //Creates an empty string to satisfy the multiparts first argument
-                String::from(""),
-                body.replace("<name>", recipient.name.trim()),
-            ))
-            .unwrap(); 
-            //Email attempts to send
-            match mailer.send(&email) { 
+            let mut _email :Message = create_message(&username, &recipient.name, &recipient.email, &header, &body);
+
+            match mailer.send(&_email) { 
                 Ok(_) => println!("Email sent successfully to {}!", recipient.email.trim()), 
                 Err(e) => panic!("Could not send email: {:?}", e), 
             }

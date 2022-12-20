@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 lettre = "0.10.1"
-lettre_email = "0.9.4"
